@@ -1,5 +1,7 @@
 import os
 import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
 
 RAW_DIR = "./data/raw"
 PROCESSED_DIR = "./data/processed"
@@ -36,3 +38,27 @@ with open(neg_file, "r", encoding="utf-8") as f:
 df_neg_combined = pd.DataFrame(neg_lines)
 df_neg_combined.to_csv(output_neg_file, index=False, header=False)
 print(f"Shape of cleaned neg data: {df_neg_combined.shape}")
+
+#creating x and y files for the test train split
+# Load cleaned data
+X_pos = pd.read_csv(f"{PROCESSED_DIR}/medicheck-expert_cleaned.csv", header=None).iloc[:,0].values
+X_neg = pd.read_csv(f"{PROCESSED_DIR}/medicheck-neg_cleaned.csv", header=None).iloc[:,0].values
+
+# Create labels
+y_pos = np.ones(len(X_pos))
+y_neg = np.zeros(len(X_neg))
+
+# Combine
+X = np.concatenate([X_pos, X_neg])
+y = np.concatenate([y_pos, y_neg])
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
+
+# Save text arrays for record if needed
+np.save(f"{PROCESSED_DIR}/X_train.npy", X_train)
+np.save(f"{PROCESSED_DIR}/X_test.npy", X_test)
+np.save(f"{PROCESSED_DIR}/y_train.npy", y_train)
+np.save(f"{PROCESSED_DIR}/y_test.npy", y_test)
+
